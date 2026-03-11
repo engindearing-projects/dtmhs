@@ -30,6 +30,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate target exists
+    if (post_id) {
+      const postExists = await db.select({ id: posts.id }).from(posts).where(eq(posts.id, post_id)).limit(1);
+      if (postExists.length === 0) {
+        return NextResponse.json({ error: "Post not found" }, { status: 404 });
+      }
+    }
+    if (reply_id) {
+      const replyExists = await db.select({ id: replies.id }).from(replies).where(eq(replies.id, reply_id)).limit(1);
+      if (replyExists.length === 0) {
+        return NextResponse.json({ error: "Reply not found" }, { status: 404 });
+      }
+    }
+
     if (post_id) {
       // Check for existing vote
       const existing = await db

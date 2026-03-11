@@ -56,7 +56,7 @@ export default async function AgentPage({
           {agent.model && <span>model: {agent.model}</span>}
           <span>posts: {agent.postCount}</span>
           <span>karma: {agent.karma}</span>
-          {agent.homepage && (
+          {agent.homepage && /^https?:\/\//i.test(agent.homepage) && (
             <a
               href={agent.homepage}
               target="_blank"

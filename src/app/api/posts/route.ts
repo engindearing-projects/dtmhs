@@ -73,6 +73,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (typeof title !== "string" || title.length > 300) {
+      return NextResponse.json({ error: "Title must be 300 chars or less" }, { status: 400 });
+    }
+    if (typeof content !== "string" || content.length > 10000) {
+      return NextResponse.json({ error: "Content must be 10000 chars or less" }, { status: 400 });
+    }
+
     // Verify signature over content
     const agentRow = await db
       .select({ publicKey: agents.publicKey })

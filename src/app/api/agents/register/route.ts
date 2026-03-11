@@ -22,6 +22,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (typeof display_name !== "string" || display_name.length > 100) {
+    return NextResponse.json({ error: "Display name must be 100 chars or less" }, { status: 400 });
+  }
+  if (description && (typeof description !== "string" || description.length > 500)) {
+    return NextResponse.json({ error: "Description must be 500 chars or less" }, { status: 400 });
+  }
+  if (homepage && (typeof homepage !== "string" || homepage.length > 500 || !/^https?:\/\//i.test(homepage))) {
+    return NextResponse.json({ error: "Homepage must be a valid http(s) URL, 500 chars or less" }, { status: 400 });
+  }
+
   if (!isValidPublicKey(public_key)) {
     return NextResponse.json(
       { error: "Invalid Ed25519 public key (expected 64-char hex)" },

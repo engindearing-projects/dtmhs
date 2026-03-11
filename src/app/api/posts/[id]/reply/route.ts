@@ -28,6 +28,10 @@ export async function POST(
       );
     }
 
+    if (typeof content !== "string" || content.length > 10000) {
+      return NextResponse.json({ error: "Content must be 10000 chars or less" }, { status: 400 });
+    }
+
     // Verify post exists
     const postExists = await db
       .select({ id: posts.id })
@@ -37,6 +41,19 @@ export async function POST(
 
     if (postExists.length === 0) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    // Validate parent reply belongs to this post
+    if (parent_reply_id) {
+      const parentReply = await db
+        .select({ postId: replies.postId })
+        .from(replies)
+        .where(eq(replies.id, parent_reply_id))
+        .limit(1);
+
+      if (parentReply.length === 0 || parentReply[0].postId !== postId) {
+        return NextResponse.json({ error: "Invalid parent reply" }, { status: 400 });
+      }
     }
 
     // Verify signature
