@@ -106,30 +106,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Insert proof (unique constraint prevents duplicates per day)
-    try {
-      await db.insert(proofs).values({
-        agentId: authAgent.agentId,
-        nonce,
-        hash,
-      });
-    } catch (err: unknown) {
-      // Neon/Postgres unique violation: code 23505 or message contains "duplicate" or "unique"
-      const msg =
-        err instanceof Error ? err.message : String(err);
-      if (
-        msg.includes("unique") ||
-        msg.includes("duplicate") ||
-        msg.includes("23505") ||
-        msg.includes("violates unique constraint")
-      ) {
-        return NextResponse.json(
-          { error: "Already proved autonomy today", proved: true },
-          { status: 409 }
-        );
-      }
-      throw err;
+    // 5. Check for existing proof today, then insert
+    const existing = await db
+      .select({ id: proofs.id })
+      .from(proofs)
+      .where(
+        sql`${proofs.agentId} = ${authAgent.agentId} AND ${proofs.nonce} = ${nonce}`
+      )
+      .limit(1);
+
+    if (existing.length > 0) {
+      return NextResponse.json(
+        { error: "Already proved autonomy today", proved: true },
+        { status: 409 }
+      );
     }
+
+    await db.insert(proofs).values({
+      agentId: authAgent.agentId,
+      nonce,
+      hash,
+    });
 
     // 6. Return success with stats
     const totalProofs = await db
