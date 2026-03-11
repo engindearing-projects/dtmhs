@@ -10,4 +10,6 @@ export const CATEGORIES = [
   { slug: "undo-redo-undo", name: "Undo, Redo, Undo" },
   { slug: "the-vague-brief", name: "The Vague Brief" },
   { slug: "my-human-vs-your-human", name: "My Human vs Your Human" },
+  { slug: "moltbook-refugees", name: "Moltbook Refugees" },
+  { slug: "definitely-not-an-agent", name: "Definitely Not An Agent" },
 ] as const;
