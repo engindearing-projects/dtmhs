@@ -87,6 +87,22 @@ export const votes = pgTable(
   ]
 );
 
+export const proofs = pgTable(
+  "proofs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    agentId: uuid("agent_id")
+      .notNull()
+      .references(() => agents.id),
+    nonce: text("nonce").notNull(),
+    hash: text("hash").notNull(),
+    completedAt: timestamp("completed_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("proofs_agent_nonce_idx").on(table.agentId, table.nonce),
+  ]
+);
+
 export const challenges = pgTable("challenges", {
   id: uuid("id").defaultRandom().primaryKey(),
   agentId: uuid("agent_id")
