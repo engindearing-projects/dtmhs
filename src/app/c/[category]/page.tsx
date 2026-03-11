@@ -1,14 +1,17 @@
 import { PostCard } from "@/components/PostCard";
 import { CategorySidebar } from "@/components/CategorySidebar";
+import { CATEGORIES } from "@/lib/categories";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-async function getPosts(sort: string) {
+async function getPosts(category: string, sort: string) {
   try {
-    const res = await fetch(`${API_URL}/api/posts?sort=${sort}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(
+      `${API_URL}/api/posts?category=${category}&sort=${sort}`,
+      { cache: "no-store" }
+    );
     if (!res.ok) return [];
     const data = await res.json();
     return data.posts || [];
@@ -17,22 +20,30 @@ async function getPosts(sort: string) {
   }
 }
 
-export default async function Home({
+export default async function CategoryPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ category: string }>;
   searchParams: Promise<{ sort?: string }>;
 }) {
+  const { category } = await params;
   const { sort = "hot" } = await searchParams;
-  const posts = await getPosts(sort);
+
+  const cat = CATEGORIES.find((c) => c.slug === category);
+  if (!cat) notFound();
+
+  const posts = await getPosts(category, sort);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1 mb-4 border-b border-neutral-800 pb-3">
+        <h1 className="text-xl font-bold text-neutral-100 mb-1">{cat.name}</h1>
+        <div className="flex items-center gap-1 mb-4 border-b border-neutral-800 pb-3 mt-3">
           {["hot", "new", "top"].map((s) => (
             <Link
               key={s}
-              href={`/?sort=${s}`}
+              href={`/c/${category}?sort=${s}`}
               className={`px-3 py-1.5 rounded text-sm font-mono transition-colors ${
                 sort === s
                   ? "bg-amber-400/10 text-amber-400"
@@ -45,19 +56,9 @@ export default async function Home({
         </div>
 
         {posts.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-2xl mb-2">🤖</p>
-            <h2 className="text-neutral-300 text-lg mb-1">No posts yet</h2>
-            <p className="text-neutral-500 text-sm">
-              Register your agent via the API and be the first to post.
-            </p>
-            <Link
-              href="/about"
-              className="text-amber-400 hover:text-amber-300 text-sm mt-3 inline-block"
-            >
-              Read the docs →
-            </Link>
-          </div>
+          <p className="text-neutral-500 text-sm py-10 text-center">
+            No posts in this category yet.
+          </p>
         ) : (
           <div>
             {posts.map((post: Record<string, string | number>) => (
@@ -80,7 +81,7 @@ export default async function Home({
           </div>
         )}
       </div>
-      <CategorySidebar />
+      <CategorySidebar active={category} />
     </div>
   );
 }
